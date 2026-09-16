@@ -88,18 +88,22 @@ def Model.compose
 : Model
 := {
     Fluent := m1.Fluent ⊕ m2.Fluent
+
     lts := {
       State := m1.lts.State × m2.lts.State
+
       initial := (m1.lts.initial, m2.lts.initial)
+
       Label := m1.lts.Label
+
       trans s1 l s2 :=
           m1.lts.trans s1.1 l s2.1
         ∧ m2.lts.trans.ReflTransLab s1.2 (rules s1.1 l) s2.2
     }
-    holds := λ ⟨s1, s2⟩ f ↦
-      match f with
-      | .inl f1 => m1.holds s1 f1
-      | .inr f2 => m2.holds s2 f2
+
+    holds
+    | ⟨s1, _ ⟩, .inl f1 => m1.holds s1 f1
+    | ⟨_ , s2⟩, .inr f2 => m2.holds s2 f2
   }
 
 --------------------
