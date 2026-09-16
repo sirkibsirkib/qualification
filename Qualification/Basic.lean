@@ -9,22 +9,8 @@ structure Lts: Type 1 where mk::
   trans: State → Label → State → Prop
 
 
-instance: HMul Lts Lts Lts where
-  hMul l r := {
-    State := l.State × r.State
-    initial := (l.initial, r.initial)
-    Label := l.Label ⊕ r.Label
-    trans := λ ⟨sl, sr⟩ x ⟨sl', sr'⟩ ↦ match x with
-      | .inl xl =>  l.trans sl xl sl'
-      | .inr xr =>  r.trans sr xr sr'
-  }
-
-def Lts.Label_rel (l1 l2: Lts) :=
-  l1.Label →
-  l2.Label →
-  Prop
-
-
+-- given an LTS whose states are pairs (α × β), swap left to right
+-- don't know if we need it but was just experimenting with `▸`
 def Lts.swap (l: Lts) {α β: Type} (h: l.State = (α × β)): Lts := {
   State   := β × α
   initial := (h ▸ l.initial).swap
@@ -43,16 +29,12 @@ def Lts.functional (lts: Lts): Prop :=
 def Lts.total (lts: Lts): Prop :=
   ∀ {s l}, ∃ s', Lts.trans lts s l s'
 
-
-#print Lts.functional
-
 def lts1: Lts := {
   State := Nat
   initial := 0
   Label := String
   trans s1 l s2 := s2 = s1+1 ∧ l = "inc"
 }
-
 
 def lts2: Lts := {
   State := String
@@ -61,20 +43,37 @@ def lts2: Lts := {
   trans _ l _ := l = "inc"
 }
 
-example: Lts := lts1 * lts2
-example: Lts := lts2 * lts1
 
 example: (lts1: Lts) # (6: Nat) — "inc" ⟶ (7: Nat) := sorry
 
 example: lts2 # "init" —"inc"⟶ "cool" :=
   sorry
 
+
+-- simple composition of two LTSs:
+-- product of states
+-- sum of labels
+-- perfectly symmetric
+instance: HMul Lts Lts Lts where
+  hMul l r := {
+    State := l.State × r.State
+    initial := (l.initial, r.initial)
+    Label := l.Label ⊕ r.Label
+    trans := λ ⟨sl, sr⟩ x ⟨sl', sr'⟩ ↦ match x with
+      | .inl xl =>  l.trans sl xl sl'
+      | .inr xr =>  r.trans sr xr sr'
+  }
+
+
+example: Lts := lts1 * lts2
+example: Lts := lts2 * lts1
+
 structure Model where mk::
   Fluent: Type
   lts: Lts
   holds: lts.State → Fluent → Prop
 
-
+-- not using this yet
 def Model.Rules (m1 m2: Model) :=
   m1.lts.State × m1.lts.State →
   m1.lts.Label →
@@ -103,6 +102,7 @@ def Model.compose
       | .inr f2 => m2.holds s2 f2
   }
 
+--------------------
 
 
 structure ConAtom (Constant: Type) where
