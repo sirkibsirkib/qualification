@@ -119,9 +119,4 @@ def ConModel' (Constant: Type) :=
 
 example: Type 1 := ConModel' String
 
-def Lts.trans_clos (lts: Lts)
-: lts.State → List lts.Label → lts.State → Prop :=
-  ReflTransLab lts.trans
-
-
 notation lts "# " s1 "—" l "⟶⋆" s2 => Lts.trans_clos lts s1 l s2
