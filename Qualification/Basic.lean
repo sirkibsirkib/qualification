@@ -8,6 +8,30 @@ structure Lts: Type 1 where mk::
   Label: Type
   trans: State → Label → State → Prop
 
+
+instance: HMul Lts Lts Lts where
+  hMul l r := {
+    State := l.State × r.State
+    initial := (l.initial, r.initial)
+    Label := l.Label ⊕ r.Label
+    trans := λ ⟨sl, sr⟩ x ⟨sl', sr'⟩ ↦ match x with
+      | .inl xl =>  l.trans sl xl sl'
+      | .inr xr =>  r.trans sr xr sr'
+  }
+
+def Lts.Label_rel (l1 l2: Lts) :=
+  l1.Label →
+  l2.Label →
+  Prop
+
+
+def Lts.swap (l: Lts) {α β: Type} (h: l.State = (α × β)): Lts := {
+  State   := β × α
+  initial := (h ▸ l.initial).swap
+  Label   := l.Label
+  trans s x s' := l.trans (h ▸ s.swap) x (h ▸ s'.swap)
+}
+
 notation lts " # " s1 " —" l "⟶ " s2 => Lts.trans lts s1 l s2
 
 def Lts.functional (lts: Lts): Prop :=
@@ -37,6 +61,8 @@ def lts2: Lts := {
   trans _ l _ := l = "inc"
 }
 
+example: Lts := lts1 * lts2
+example: Lts := lts2 * lts1
 
 example: (lts1: Lts) # (6: Nat) — "inc" ⟶ (7: Nat) := sorry
 
@@ -49,7 +75,7 @@ structure Model where mk::
   holds: lts.State → Fluent → Prop
 
 
-def Model.Rule (m1 m2: Model) :=
+def Model.Rules (m1 m2: Model) :=
   m1.lts.State × m1.lts.State →
   m1.lts.Label →
   List m2.lts.Label
@@ -59,7 +85,7 @@ def Model.Rule (m1 m2: Model) :=
 -- are encoded in the (M1 × M2) states.
 def Model.compose
   (m1 m2: Model)
-  (rules: Rule m1 m2 → Prop)
+  (rules: m1.lts.State → m1.lts.Label → List m2.lts.Label)
 : Model
 := {
     Fluent := m1.Fluent ⊕ m2.Fluent
@@ -67,13 +93,16 @@ def Model.compose
       State := m1.lts.State × m2.lts.State
       initial := (m1.lts.initial, m2.lts.initial)
       Label := m1.lts.Label
-      trans := sorry -- TODO rules how ??
+      trans s1 l s2 :=
+          m1.lts.trans s1.1 l s2.1
+        ∧ m2.lts.trans.ReflTransLab s1.2 (rules s1.1 l) s2.2
     }
     holds := λ ⟨s1, s2⟩ f ↦
       match f with
       | .inl f1 => m1.holds s1 f1
       | .inr f2 => m2.holds s2 f2
   }
+
 
 
 structure ConAtom (Constant: Type) where
