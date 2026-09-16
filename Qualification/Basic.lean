@@ -1,10 +1,26 @@
 import Qualification.Utils
 
+
+-- in each state, the label is input, and the destination is output
 structure Lts: Type 1 where mk::
   State: Type
   initial: State
   Label: Type
   trans: State → Label → State → Prop
+
+notation lts " # " s1 " —" l "⟶ " s2 => Lts.trans lts s1 l s2
+
+def Lts.functional (lts: Lts): Prop :=
+  ∀ {s s1 s2: lts.State} {l: lts.Label},
+    Lts.trans lts s l s1 →
+    Lts.trans lts s l s2 →
+    s1 = s2
+
+def Lts.total (lts: Lts): Prop :=
+  ∀ {s l}, ∃ s', Lts.trans lts s l s'
+
+
+#print Lts.functional
 
 def lts1: Lts := {
   State := Nat
@@ -21,7 +37,6 @@ def lts2: Lts := {
   trans _ l _ := l = "inc"
 }
 
-notation lts " # " s1 " —" l "⟶ " s2 => Lts.trans lts s1 l s2
 
 example: (lts1: Lts) # (6: Nat) — "inc" ⟶ (7: Nat) := sorry
 
@@ -33,9 +48,20 @@ structure Model where mk::
   lts: Lts
   holds: lts.State → Fluent → Prop
 
-#check Sum
 
-def Model.compose (m1 m2: Model) (megatrans: m1.lts.State × m2.lts.State → m1.lts.Label → m1.lts.State × m2.lts.State → Prop): Model := {
+def Model.Rule (m1 m2: Model) :=
+  m1.lts.State × m1.lts.State →
+  m1.lts.Label →
+  List m2.lts.Label
+
+-- we are removing your choice of L2 labels
+-- L1 labels are exposed but the consequences in M2
+-- are encoded in the (M1 × M2) states.
+def Model.compose
+  (m1 m2: Model)
+  (rules: Rule m1 m2)
+: Model
+:= {
     Fluent := m1.Fluent ⊕ m2.Fluent
     lts := {
       State := m1.lts.State × m2.lts.State
