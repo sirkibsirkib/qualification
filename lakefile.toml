@@ -1,0 +1,10 @@
+name = "qualification"
+version = "0.1.0"
+defaultTargets = ["qualification"]
+
+[[lean_lib]]
+name = "Qualification"
+
+[[lean_exe]]
+name = "qualification"
+root = "Main"
