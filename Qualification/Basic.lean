@@ -33,6 +33,23 @@ structure Model where mk::
   lts: Lts
   holds: lts.State → Fluent → Prop
 
+#check Sum
+
+def Model.compose (m1 m2: Model) (megatrans: m1.lts.State × m2.lts.State → m1.lts.Label → m1.lts.State × m2.lts.State → Prop): Model := {
+    Fluent := m1.Fluent ⊕ m2.Fluent
+    lts := {
+      State := m1.lts.State × m2.lts.State
+      initial := (m1.lts.initial, m2.lts.initial)
+      Label := m1.lts.Label
+      trans := megatrans
+    }
+    holds := λ ⟨s1, s2⟩ f ↦
+      match f with
+      | .inl f1 => m1.holds s1 f1
+      | .inr f2 => m2.holds s2 f2
+  }
+
+
 structure ConAtom (Constant: Type) where
   pred: Constant
   args: List Constant
