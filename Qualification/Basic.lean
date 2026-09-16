@@ -59,7 +59,7 @@ def Model.Rule (m1 m2: Model) :=
 -- are encoded in the (M1 × M2) states.
 def Model.compose
   (m1 m2: Model)
-  (rules: Rule m1 m2)
+  (rules: Rule m1 m2 → Prop)
 : Model
 := {
     Fluent := m1.Fluent ⊕ m2.Fluent
@@ -67,7 +67,7 @@ def Model.compose
       State := m1.lts.State × m2.lts.State
       initial := (m1.lts.initial, m2.lts.initial)
       Label := m1.lts.Label
-      trans := megatrans
+      trans := sorry -- TODO rules how ??
     }
     holds := λ ⟨s1, s2⟩ f ↦
       match f with
