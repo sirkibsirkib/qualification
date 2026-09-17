@@ -102,8 +102,8 @@ def Model.compose
     }
 
     holds
-    | ⟨s1, _ ⟩, .inl f1 => m1.holds s1 f1
-    | ⟨_ , s2⟩, .inr f2 => m2.holds s2 f2
+    | ⟨s, _⟩, .inl f => m1.holds s f
+    | ⟨_, s⟩, .inr f => m2.holds s f
   }
 
 --------------------
